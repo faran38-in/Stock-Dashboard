@@ -9,15 +9,15 @@
   <!-- SheetJS -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; }
     .tab-active { border-bottom: 3px solid #f97316; color: #ea580c; font-weight: 700; background-color: #fff7ed; }
   </style>
 </head>
 <body class="min-h-screen pb-20">
 
   <!-- Header -->
-  <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 shadow-lg sticky top-0 z-20 border-b border-blue-900/50">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
+  <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 shadow-md sticky top-0 z-20 border-b border-blue-900/50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div>
         <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-orange-400 flex items-center gap-2">
           ⚡ WBSO Stock Portal
@@ -33,7 +33,7 @@
 
   <!-- Navigation Tabs -->
   <nav class="bg-white shadow-sm sticky top-[65px] z-10 border-b border-slate-200 overflow-x-auto">
-    <div class="max-w-6xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+    <div class="max-w-7xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
       <button onclick="switchTab('search')" id="tab-search" class="flex-1 py-3 px-4 text-center tab-active transition">🔍 Stock Search</button>
       <button onclick="switchTab('cfa')" id="tab-cfa" class="flex-1 py-3 px-4 text-center transition">📊 CFA Fixed</button>
       <button onclick="switchTab('transfer')" id="tab-transfer" class="flex-1 py-3 px-4 text-center transition">🚚 CIP to CFA</button>
@@ -42,22 +42,25 @@
   </nav>
 
   <!-- Main Content Container -->
-  <main class="max-w-6xl mx-auto p-3 sm:p-5">
+  <main class="max-w-7xl mx-auto p-3 sm:p-5">
 
-    <!-- TAB 1: STOCK SEARCH (Rectangular Grid Layout) -->
+    <!-- TAB 1: STOCK SEARCH -->
     <section id="view-search" class="space-y-4">
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
         <div class="relative">
           <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">🔍</span>
-          <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Search Material Code or Grade (e.g., 7420401, 4T, PRIDE)..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+          <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Type to search material code or grade (e.g., 7420401, 4T, PRIDE)..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
         </div>
         <select id="plantFilter" onchange="renderStockSearch()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
           <option value="ALL">All Plants & CFAs</option>
         </select>
       </div>
-      <div id="stockSummary" class="text-xs text-slate-500 font-semibold px-1"></div>
-      <!-- Rectangular Grid Container -->
-      <div id="stockResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      <div class="flex justify-between items-center px-1">
+        <div id="stockSummary" class="text-xs text-slate-500 font-semibold"></div>
+        <div class="text-[11px] text-orange-600 font-bold bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">✨ Rectangular Grid View</div>
+      </div>
+      <!-- Strict 3-Column Rectangular Grid -->
+      <div id="stockResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
     <!-- TAB 2: CFA DASHBOARD FIXED -->
@@ -65,7 +68,7 @@
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
         <input type="text" id="cfaSearchInput" oninput="renderCFADashboard()" placeholder="Filter SKU Code or Grade (e.g., TMGO, 15W-40)..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
       </div>
-      <div id="cfaResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      <div id="cfaResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
     <!-- TAB 3: STOCK TRANSFER CIP TO CFA -->
@@ -76,12 +79,12 @@
         </select>
       </div>
       <div id="transferSummary" class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 rounded-2xl shadow-sm flex justify-between items-center text-sm font-semibold"></div>
-      <div id="transferResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      <div id="transferResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
     <!-- TAB 4: HERO BO -->
-    <section id="view-hero" class="hidden space-y-3.5">
-      <div id="heroResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+    <section id="view-hero" class="hidden space-y-4">
+      <div id="heroResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
   </main>
@@ -152,7 +155,7 @@
         cfas.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // TAB 1 RENDER: Rectangular Grid with Deduplicated / Combined Totals
+    // TAB 1 RENDER: Rectangular Grid Layout with Combined Totals
     function renderStockSearch() {
       const q = (document.getElementById('stockSearchInput').value || '').toLowerCase().trim();
       const plant = document.getElementById('plantFilter').value;
@@ -189,19 +192,19 @@
 
       let combinedList = Object.values(aggregatedMap);
 
-      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 90)} of ${combinedList.length} consolidated locations`;
+      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 30)} of ${combinedList.length} items`;
 
-      container.innerHTML = combinedList.slice(0, 90).map(r => `
+      container.innerHTML = combinedList.slice(0, 30).map(r => `
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between relative overflow-hidden group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+          <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-600"></div>
           <div>
-            <div class="flex items-center justify-between gap-1 mb-2">
-              <span class="text-[11px] font-extrabold bg-blue-50 text-blue-900 px-2 py-0.5 rounded-md border border-blue-100">${r['Material']}</span>
-              <span class="text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md truncate max-w-[150px]">${r['Name 1']}</span>
+            <div class="flex items-center justify-between gap-1.5 mb-2 pl-1">
+              <span class="text-[11px] font-extrabold bg-blue-50 text-blue-900 px-2.5 py-1 rounded-lg border border-blue-100">${r['Material']}</span>
+              <span class="text-[11px] font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg truncate max-w-[160px] border border-orange-100">${r['Name 1']}</span>
             </div>
-            <h3 class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight line-clamp-2 mb-3">${r['Material Description']}</h3>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight line-clamp-2 mb-4 pl-1">${r['Material Description']}</h3>
           </div>
-          <div class="pt-3 border-t border-slate-100 flex justify-between items-end bg-slate-50/50 -mx-4 -mb-4 p-3 rounded-b-2xl">
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/70 -mx-4 -mb-4 p-3.5 rounded-b-2xl">
             <div>
               <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Available Stock</div>
               <div class="text-base font-extrabold text-emerald-700">${r['Unrestricted']} <span class="text-xs font-semibold text-slate-500">${r['Base Unit of Measure']}</span></div>
@@ -229,27 +232,27 @@
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-start border-b border-slate-100 pb-2 mb-2">
-              <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">${r['SKU Code']}</span>
-              <span class="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">CIP: ${r['CIP Kolkata'] || 'A-0;T-0'}</span>
+              <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-lg">${r['SKU Code']}</span>
+              <span class="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-lg">CIP: ${r['CIP Kolkata'] || 'A-0;T-0'}</span>
             </div>
             <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2">${r['SKU Description']}</h3>
           </div>
           <div class="grid grid-cols-3 gap-1.5 text-center text-xs pt-2">
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <div class="font-bold text-slate-700 text-[11px]">Mourigram</div>
               <div class="text-[10px] text-slate-500">${r['CFA-MOURIGRAM'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
                 Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram'] || 0}
               </div>
             </div>
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <div class="font-bold text-slate-700 text-[11px]">Rajbandh</div>
               <div class="text-[10px] text-slate-500">${r['CFA-RAJBANDH'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
                 Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh'] || 0}
               </div>
             </div>
-            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <div class="font-bold text-slate-700 text-[11px]">Raninagar</div>
               <div class="text-[10px] text-slate-500">${r['CFA-RANINAGAR (LUBE)'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
@@ -274,13 +277,13 @@
       document.getElementById('transferResults').innerHTML = filtered.map(r => `
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
           <div>
-            <div class="flex items-center justify-between gap-1 mb-2">
-              <span class="text-[11px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">${r['SKU Code']}</span>
-              <span class="text-[11px] bg-orange-100 text-orange-800 font-semibold px-2 py-0.5 rounded-md">${(r['CFA'] || '').trim()}</span>
+            <div class="flex items-center justify-between gap-1.5 mb-2">
+              <span class="text-[11px] font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-lg">${r['SKU Code']}</span>
+              <span class="text-[11px] bg-orange-100 text-orange-800 font-semibold px-2.5 py-1 rounded-lg">${(r['CFA'] || '').trim()}</span>
             </div>
             <h4 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2">${r['SKU Description']}</h4>
           </div>
-          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/50 -mx-4 -mb-4 p-3 rounded-b-2xl">
+          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/70 -mx-4 -mb-4 p-3.5 rounded-b-2xl">
             <span class="text-xs font-bold text-slate-700">Qty: ${r['Qty '] || r['Qty'] || 0}</span>
             <span class="text-xs font-extrabold text-blue-700">${Number(r['Qty in KL'] || 0).toFixed(2)} KL</span>
           </div>
@@ -291,8 +294,8 @@
     function renderHero() {
       document.getElementById('heroResults').innerHTML = db.heroBO.map(r => `
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
-          <div>
+          <div class="absolute left-0 top-0 bottom-0 w-2 bg-red-500"></div>
+          <div class="pl-1">
             <div class="flex justify-between items-center mb-1.5">
               <span class="text-[10px] font-bold text-slate-400">PO: ${r['PO No']}</span>
               <span class="text-[10px] font-bold text-slate-500">IOC: ${r['IOC Code']}</span>
@@ -300,7 +303,7 @@
             <h4 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 mb-2">${r['Part Desc.']}</h4>
             <span class="text-[11px] text-slate-500 block">Part No: ${r['Part No.']} (Pack: ${r['Pack Size']})</span>
           </div>
-          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-red-50/40 -mx-4 -mb-4 p-3 rounded-b-2xl">
+          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-red-50/50 -mx-4 -mb-4 p-3.5 rounded-b-2xl">
             <div class="text-sm font-extrabold text-red-600">${r['Order Qty']} Nos</div>
             <div class="text-xs text-slate-700 font-bold">${r['Qty in Carton']} Cartons</div>
           </div>
