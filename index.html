@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WBSO Lube Stock Dashboard</title>
+  <!-- Tailwind CSS for Mobile Styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS library to read Excel (.xlsx) files directly -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .tab-active { border-bottom: 3px solid #f97316; color: #ea580c; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen pb-16">
+
+  <!-- Top Header -->
+  <header class="bg-blue-950 text-white p-4 shadow-md sticky top-0 z-20">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-orange-400">WBSO Stock Portal</h1>
+        <p id="fileStatus" class="text-xs text-slate-300">Auto-loading Excel or Upload manually</p>
+      </div>
+      <label class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold py-2 px-3 rounded-lg shadow cursor-pointer transition">
+        📂 Load Excel
+        <input type="file" id="excelUpload" accept=".xlsx, .xls" class="hidden">
+      </label>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="bg-white shadow-sm sticky top-[68px] z-10 overflow-x-auto">
+    <div class="max-w-4xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+      <button onclick="switchTab('search')" id="tab-search" class="flex-1 py-3 px-4 text-center tab-active">🔍 Stock Search</button>
+      <button onclick="switchTab('cfa')" id="tab-cfa" class="flex-1 py-3 px-4 text-center">📊 CFA Fixed</button>
+      <button onclick="switchTab('transfer')" id="tab-transfer" class="flex-1 py-3 px-4 text-center">🚚 CIP to CFA</button>
+      <button onclick="switchTab('hero')" id="tab-hero" class="flex-1 py-3 px-4 text-center">🏍️ Hero BO</button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="max-w-4xl mx-auto p-3">
+
+    <!-- TAB 1: LIVE STOCK SEARCH (From 'Stock' Sheet) -->
+    <section id="view-search" class="space-y-3">
+      <div class="bg-white p-3 rounded-xl shadow-sm space-y-2">
+        <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Search Material Code or Grade (e.g., 4T, 7440253, PRIDE)..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <select id="plantFilter" onchange="renderStockSearch()" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50">
+          <option value="ALL">All Plants & CFAs</option>
+        </select>
+      </div>
+      <div id="stockSummary" class="text-xs text-slate-500 font-medium px-1"></div>
+      <div id="stockResults" class="space-y-2.5"></div>
+    </section>
+
+    <!-- TAB 2: CFA DASHBOARD FIXED (From 'Dashboard Fixed' Sheet) -->
+    <section id="view-cfa" class="hidden space-y-3">
+      <div class="bg-white p-3 rounded-xl shadow-sm space-y-2">
+        <input type="text" id="cfaSearchInput" oninput="renderCFADashboard()" placeholder="Filter SKU Code or Grade (e.g., TMGO, 15W-40)..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+      </div>
+      <div id="cfaResults" class="space-y-2.5"></div>
+    </section>
+
+    <!-- TAB 3: STOCK TRANSFER CIP TO CFA -->
+    <section id="view-transfer" class="hidden space-y-3">
+      <div class="bg-white p-3 rounded-xl shadow-sm flex gap-2">
+        <select id="transferCfaFilter" onchange="renderTransfers()" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50">
+          <option value="ALL">All Destination CFAs</option>
+        </select>
+      </div>
+      <div id="transferSummary" class="bg-blue-900 text-white p-3 rounded-xl shadow-sm flex justify-between items-center text-sm font-semibold"></div>
+      <div id="transferResults" class="space-y-2"></div>
+    </section>
+
+    <!-- TAB 4: HERO BO -->
+    <section id="view-hero" class="hidden space-y-2.5">
+      <div id="heroResults" class="space-y-2.5"></div>
+    </section>
+
+  </main>
+
+  <script>
+    let db = { stock: [], cfaFixed: [], transfers: [], heroBO: [] };
+
+    // 1. Try to auto-load Excel file if saved in the same GitHub folder as 'data.xlsx'
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('data.xlsx')
+        .then(res => {
+          if (!res.ok) throw new Error("No default data.xlsx found");
+          return res.arrayBuffer();
+        })
+        .then(buf => processWorkbook(XLSX.read(buf, { type: 'array' }), "Auto-loaded data.xlsx"))
+        .catch(() => {
+          document.getElementById('stockResults').innerHTML = `
+            <div class="bg-white p-6 rounded-xl shadow-sm text-center text-slate-600">
+              <p class="font-bold text-base mb-1">Welcome to WBSO Stock App</p>
+              <p class="text-xs mb-4">Tap the orange <b>"📂 Load Excel"</b> button at the top right and select your <b>WBSO Stock Dasboard Mac.xlsx</b> file to view live data.</p>
+            </div>`;
+        });
+    });
+
+    // 2. Handle Manual File Upload on Mobile/Desktop
+    document.getElementById('excelUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('fileStatus').innerText = "Reading " + file.name + "...";
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        processWorkbook(workbook, "Loaded: " + file.name);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // 3. Parse Sheets from Excel File
+    function processWorkbook(workbook, statusText) {
+      document.getElementById('fileStatus').innerText = statusText;
+
+      if (workbook.Sheets['Stock']) {
+        db.stock = XLSX.utils.sheet_to_json(workbook.Sheets['Stock']);
+        populatePlantDropdown();
+      }
+      if (workbook.Sheets['Dashboard Fixed']) {
+        db.cfaFixed = XLSX.utils.sheet_to_json(workbook.Sheets['Dashboard Fixed']);
+      }
+      if (workbook.Sheets['Stock Transfer from CIP to CFA']) {
+        db.transfers = XLSX.utils.sheet_to_json(workbook.Sheets['Stock Transfer from CIP to CFA']);
+        populateTransferDropdown();
+      }
+      if (workbook.Sheets['Hero BO']) {
+        db.heroBO = XLSX.utils.sheet_to_json(workbook.Sheets['Hero BO']);
+      }
+
+      renderStockSearch();
+      renderCFADashboard();
+      renderTransfers();
+      renderHero();
+    }
+
+    function populatePlantDropdown() {
+      const plants = [...new Set(db.stock.map(r => r['Name 1']).filter(Boolean))].sort();
+      const select = document.getElementById('plantFilter');
+      select.innerHTML = '<option value="ALL">All Plants & CFAs (' + plants.length + ' Locations)</option>' +
+        plants.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
+    function populateTransferDropdown() {
+      const cfas = [...new Set(db.transfers.map(r => (r['CFA'] || '').trim()).filter(Boolean))].sort();
+      const select = document.getElementById('transferCfaFilter');
+      select.innerHTML = '<option value="ALL">All Destination CFAs</option>' +
+        cfas.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    // TAB 1 RENDER: Stock Search
+    function renderStockSearch() {
+      const q = (document.getElementById('stockSearchInput').value || '').toLowerCase().trim();
+      const plant = document.getElementById('plantFilter').value;
+      const container = document.getElementById('stockResults');
+
+      let filtered = db.stock.filter(row => {
+        const mat = String(row['Material'] || '').toLowerCase();
+        const desc = String(row['Material Description'] || '').toLowerCase();
+        const locName = String(row['Name 1'] || '');
+        const matchQuery = !q || mat.includes(q) || desc.includes(q);
+        const matchPlant = (plant === 'ALL') || (locName === plant);
+        return matchQuery && matchPlant && (Number(row['Unrestricted'] || 0) > 0 || Number(row['Transit and Transfer'] || 0) > 0);
+      });
+
+      document.getElementById('stockSummary').innerText = `Showing ${Math.min(filtered.length, 60)} of ${filtered.length} matching stock records`;
+
+      container.innerHTML = filtered.slice(0, 60).map(r => `
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border-l-4 border-blue-800 flex justify-between items-center">
+          <div class="pr-2">
+            <span class="text-[11px] font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded">${r['Material'] || ''}</span>
+            <span class="text-[11px] text-orange-600 font-semibold ml-1">${r['Name 1'] || ''} (${r['Storage Location'] || ''})</span>
+            <h3 class="text-sm font-bold text-slate-900 mt-1">${r['Material Description'] || ''}</h3>
+          </div>
+          <div class="text-right whitespace-nowrap">
+            <div class="text-xs text-slate-500">Available: <b class="text-emerald-700 text-sm">${r['Unrestricted'] || 0}</b> ${r['Base Unit of Measure'] || ''}</div>
+            <div class="text-xs text-slate-500">Transit: <b class="text-amber-600 text-sm">${r['Transit and Transfer'] || 0}</b></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // TAB 2 RENDER: CFA Fixed Dashboard
+    function renderCFADashboard() {
+      const q = (document.getElementById('cfaSearchInput').value || '').toLowerCase().trim();
+      const container = document.getElementById('cfaResults');
+
+      let filtered = db.cfaFixed.filter(r => {
+        const code = String(r['SKU Code'] || '').toLowerCase();
+        const desc = String(r['SKU Description'] || '').toLowerCase();
+        return code && (!q || code.includes(q) || desc.includes(q));
+      });
+
+      container.innerHTML = filtered.map(r => `
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 space-y-2">
+          <div class="flex justify-between items-start border-b pb-2">
+            <div>
+              <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">${r['SKU Code']}</span>
+              <h3 class="text-sm font-bold text-slate-900 mt-1">${r['SKU Description']}</h3>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 block uppercase">CIP Kolkata</span>
+              <span class="text-xs font-bold text-slate-800">${r['CIP Kolkata'] || 'A-0;T-0'}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs pt-1">
+            <div class="bg-slate-50 p-2 rounded-lg">
+              <div class="font-bold text-slate-700">Mourigram</div>
+              <div class="text-[11px] text-slate-500">${r['CFA-MOURIGRAM'] || '-'}</div>
+              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
+                Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram'] || 0}
+              </div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg">
+              <div class="font-bold text-slate-700">Rajbandh</div>
+              <div class="text-[11px] text-slate-500">${r['CFA-RAJBANDH'] || '-'}</div>
+              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
+                Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh'] || 0}
+              </div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg">
+              <div class="font-bold text-slate-700">Raninagar</div>
+              <div class="text-[11px] text-slate-500">${r['CFA-RANINAGAR (LUBE)'] || '-'}</div>
+              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
+                Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar'] || 0}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // TAB 3 RENDER: Stock Transfer from CIP to CFA
+    function renderTransfers() {
+      const cfa = document.getElementById('transferCfaFilter').value;
+      const filtered = db.transfers.filter(r => cfa === 'ALL' || (r['CFA'] || '').trim() === cfa);
+      const totalKL = filtered.reduce((sum, r) => sum + (Number(r['Qty in KL']) || 0), 0);
+
+      document.getElementById('transferSummary').innerHTML = `
+        <span>Total Items: ${filtered.length} SKUs</span>
+        <span class="text-orange-300">Total Volume: ${totalKL.toFixed(2)} KL</span>
+      `;
+
+      document.getElementById('transferResults').innerHTML = filtered.map(r => `
+        <div class="bg-white p-3 rounded-xl shadow-sm flex justify-between items-center">
+          <div>
+            <span class="text-[11px] font-bold text-blue-900">${r['SKU Code']}</span>
+            <span class="text-[11px] bg-orange-100 text-orange-800 font-semibold px-2 py-0.5 rounded ml-1">${(r['CFA'] || '').trim()}</span>
+            <h4 class="text-sm font-bold text-slate-800 mt-0.5">${r['SKU Description']}</h4>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-bold text-slate-900">Qty: ${r['Qty '] || r['Qty'] || 0}</div>
+            <div class="text-xs text-blue-600 font-semibold">${Number(r['Qty in KL'] || 0).toFixed(2)} KL</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // TAB 4 RENDER: Hero Back Orders
+    function renderHero() {
+      document.getElementById('heroResults').innerHTML = db.heroBO.map(r => `
+        <div class="bg-white p-3.5 rounded-xl shadow-sm flex justify-between items-center border-l-4 border-red-600">
+          <div>
+            <span class="text-xs font-bold text-slate-500">PO: ${r['PO No']} | IOC: ${r['IOC Code']}</span>
+            <h4 class="text-sm font-bold text-slate-900 mt-0.5">${r['Part Desc.']}</h4>
+            <span class="text-xs text-slate-500">Part No: ${r['Part No.']} (Pack: ${r['Pack Size']})</span>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-bold text-red-600">${r['Order Qty']} Nos</div>
+            <div class="text-xs text-slate-600 font-semibold">${r['Qty in Carton']} Cartons</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Tab Switcher
+    function switchTab(tab) {
+      ['search', 'cfa', 'transfer', 'hero'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('tab-active');
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('tab-active');
+    }
+  </script>
+</body>
+</html>
