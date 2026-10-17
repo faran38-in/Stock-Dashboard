@@ -25,9 +25,9 @@
         <p id="fileStatus" class="text-[11px] text-slate-300 font-medium">Synced live from GitHub</p>
       </div>
       <div class="flex items-center gap-2">
-        <!-- Stock Update Timestamp Badge directly from cell J4 -->
+        <!-- Stock Update Timestamp Badge from Cell J4 -->
         <div class="text-[11px] bg-slate-800/90 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl font-medium">
-          📅 Stock Updated: <span id="syncDate" class="text-orange-300 font-bold">Reading J4...</span>
+          📅 Stock Updated: <span id="syncDate" class="text-orange-300 font-bold">Loading J4...</span>
         </div>
         <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 active:scale-95 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl shadow-sm cursor-pointer transition flex items-center gap-1.5">
           <span>📂 Override</span>
@@ -119,24 +119,30 @@
     function processWorkbook(workbook, statusText) {
       document.getElementById('fileStatus').innerText = statusText;
 
-      // Read exact date from cell J4 of the 'Stock' tab
+      // Extract date precisely from cell J4 of the 'Stock' sheet
       if (workbook.Sheets['Stock']) {
         const stockSheet = workbook.Sheets['Stock'];
         const cellJ4 = stockSheet['J4'];
-        const cellK4 = stockSheet['K4']; // Time cell if separate
-
+        
         if (cellJ4 && cellJ4.v) {
-          let dateVal = cellJ4.v;
-          // If SheetJS gives a serial number or date string, format it nicely
-          if (typeof dateVal === 'number') {
-            // Excel serial date conversion fallback if needed, or let SheetJS handle w property
-            dateVal = cellJ4.w || new Date(Math.round((dateVal - (25567 + 2)) * 86400 * 1000)).toLocaleDateString('en-IN');
+          let val = cellJ4.v;
+          // If SheetJS parses it as Excel date serial or string
+          if (typeof val === 'number') {
+            let dateObj = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+            document.getElementById('syncDate').innerText = dateObj.toLocaleDateString('en-IN');
+          } else {
+            // If it's a date string or object
+            let dateStr = String(val).split('T')[0];
+            // Format neatly if YYYY-MM-DD
+            let parts = dateStr.split('-');
+            if (parts.length === 3) {
+              document.getElementById('syncDate').innerText = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+              document.getElementById('syncDate').innerText = dateStr;
+            }
           }
-          
-          let timeStr = (cellK4 && cellK4.w) ? ' ' + cellK4.w : '';
-          document.getElementById('syncDate').innerText = String(dateVal).split('T')[0] + timeStr;
         } else {
-          document.getElementById('syncDate').innerText = "Date not found in J4";
+          document.getElementById('syncDate').innerText = "Not found in J4";
         }
 
         db.stock = XLSX.utils.sheet_to_json(stockSheet);
@@ -206,7 +212,7 @@
 
       let combinedList = Object.values(aggregatedMap);
 
-      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 30)} of${combinedList.length} items`;
+      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 30)} of ${combinedList.length} items`;
 
       container.innerHTML = combinedList.slice(0, 30).map(r => `
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between relative overflow-hidden group">
@@ -262,4 +268,57 @@
             <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <div class="font-bold text-slate-700 text-[11px]">Rajbandh</div>
               <div class="text-[10px] text-slate-500">${r['CFA-RAJBANDH'] || '-'}</div>
-              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh']) > 0 ? 'text-
+              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
+                Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh'] || 0}
+              </div>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="font-bold text-slate-700 text-[11px]">Raninagar</div>
+              <div class="text-[10px] text-slate-500">${r['CFA-RANINAGAR (LUBE)'] || '-'}</div>
+              <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
+                Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar'] || 0}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTransfers() {
+      const cfa = document.getElementById('transferCfaFilter').value;
+      const filtered = db.transfers.filter(r => cfa === 'ALL' || (r['CFA'] || '').trim() === cfa);
+      const totalKL = filtered.reduce((sum, r) => sum + (Number(r['Qty in KL']) || 0), 0);
+
+      document.getElementById('transferSummary').innerHTML = `
+        <span>Total Items: ${filtered.length} SKUs</span>
+        <span class="text-orange-300">Volume: ${totalKL.toFixed(2)} KL</span>
+      `;
+
+      document.getElementById('transferResults').innerHTML = filtered.map(r => `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-1.5 mb-2">
+              <span class="text-[11px] font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-lg">${r['SKU Code']}</span>
+              <span class="text-[11px] bg-orange-100 text-orange-800 font-semibold px-2.5 py-1 rounded-lg">${(r['CFA'] || '').trim()}</span>
+            </div>
+            <h4 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2">${r['SKU Description']}</h4>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/70 -mx-4 -mb-4 p-3.5 rounded-b-2xl">
+            <span class="text-xs font-bold text-slate-700">Qty: ${r['Qty '] || r['Qty'] || 0}</span>
+            <span class="text-xs font-extrabold text-blue-700">${Number(r['Qty in KL'] || 0).toFixed(2)} KL</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tab) {
+      ['search', 'cfa', 'transfer'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('tab-active');
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('tab-active');
+    }
+  </script>
+</body>
+</html>
