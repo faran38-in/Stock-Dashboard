@@ -25,9 +25,9 @@
         <p id="fileStatus" class="text-[11px] text-slate-300 font-medium">Synced live from GitHub</p>
       </div>
       <div class="flex items-center gap-2">
-        <!-- Stock Update Timestamp Badge on Top Right -->
-        <div id="updateBadge" class="hidden sm:block text-[11px] bg-slate-800/90 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl font-medium">
-          📅 Stock Updated: <span id="syncDate" class="text-orange-300 font-bold">Loading...</span>
+        <!-- Stock Update Timestamp Badge from Excel Stock Tab -->
+        <div class="text-[11px] bg-slate-800/90 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl font-medium">
+          📅 Stock Updated: <span id="syncDate" class="text-orange-300 font-bold">Reading Excel...</span>
         </div>
         <label class="bg-slate-800 hover:bg-slate-700 border border-slate-700 active:scale-95 text-slate-200 text-xs font-semibold py-2 px-3 rounded-xl shadow-sm cursor-pointer transition flex items-center gap-1.5">
           <span>📂 Override</span>
@@ -37,7 +37,7 @@
     </div>
   </header>
 
-  <!-- Navigation Tabs (Hero BO Removed) -->
+  <!-- Navigation Tabs -->
   <nav class="bg-white shadow-sm sticky top-[65px] z-10 border-b border-slate-200 overflow-x-auto">
     <div class="max-w-7xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
       <button onclick="switchTab('search')" id="tab-search" class="flex-1 py-3 px-4 text-center tab-active transition">🔍 Stock Search</button>
@@ -107,11 +107,6 @@
       const file = e.target.files[0];
       if (!file) return;
       document.getElementById('fileStatus').innerText = "Reading " + file.name + "...";
-      
-      // Format file last modified date for top right badge
-      const modDate = file.lastModified ? new Date(file.lastModified).toLocaleDateString() : new Date().toLocaleDateString();
-      document.getElementById('syncDate').innerText = modDate;
-
       const reader = new FileReader();
       reader.onload = function(evt) {
         const data = new Uint8Array(evt.target.result);
@@ -123,14 +118,38 @@
 
     function processWorkbook(workbook, statusText) {
       document.getElementById('fileStatus').innerText = statusText;
-      
-      // Set default current date if automatic load
-      document.getElementById('syncDate').innerText = new Date().toLocaleDateString();
 
+      // Extract update date from Stock tab (looking for cells containing date values in columns 8, 9, or 10)
       if (workbook.Sheets['Stock']) {
-        db.stock = XLSX.utils.sheet_to_json(workbook.Sheets['Stock']);
+        const stockSheet = workbook.Sheets['Stock'];
+        let foundDate = null;
+        
+        // Scan the first 10 rows of the sheet for any date/time value
+        const range = XLSX.utils.decode_range(stockSheet['!ref'] || 'A1:K50');
+        for (let R = range.s.r; R <= Math.min(range.e.r, 20); ++R) {
+          for (let C = 8; C <= 10; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+            const cell = stockSheet[cellAddress];
+            if (cell && (cell.t === 'd' || (cell.v && String(cell.v).includes('-')))) {
+              foundDate = cell.v;
+              break;
+            }
+          }
+          if (foundDate) break;
+        }
+
+        if (foundDate) {
+          // Format date cleanly
+          let dateObj = new Date(foundDate);
+          document.getElementById('syncDate').innerText = !isNaN(dateObj) ? dateObj.toLocaleString('en-IN', {dateStyle: 'medium', timeStyle: 'short'}) : String(foundDate);
+        } else {
+          document.getElementById('syncDate').innerText = "Not specified in Stock tab";
+        }
+
+        db.stock = XLSX.utils.sheet_to_json(stockSheet);
         populatePlantDropdown();
       }
+
       if (workbook.Sheets['Dashboard Fixed']) {
         db.cfaFixed = XLSX.utils.sheet_to_json(workbook.Sheets['Dashboard Fixed']);
       }
