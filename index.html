@@ -20,10 +20,10 @@
     <div class="max-w-4xl mx-auto flex justify-between items-center">
       <div>
         <h1 class="text-lg font-bold tracking-tight text-orange-400">WBSO Stock Portal</h1>
-        <p id="fileStatus" class="text-xs text-slate-300">Auto-loading Excel or Upload manually</p>
+        <p id="fileStatus" class="text-xs text-slate-300">Connecting to GitHub live data...</p>
       </div>
       <label class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold py-2 px-3 rounded-lg shadow cursor-pointer transition">
-        📂 Load Excel
+        📂 Manual Override
         <input type="file" id="excelUpload" accept=".xlsx, .xls" class="hidden">
       </label>
     </div>
@@ -42,7 +42,7 @@
   <!-- Main Content Container -->
   <main class="max-w-4xl mx-auto p-3">
 
-    <!-- TAB 1: LIVE STOCK SEARCH (From 'Stock' Sheet) -->
+    <!-- TAB 1: LIVE STOCK SEARCH -->
     <section id="view-search" class="space-y-3">
       <div class="bg-white p-3 rounded-xl shadow-sm space-y-2">
         <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Search Material Code or Grade (e.g., 4T, 7440253, PRIDE)..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
@@ -54,7 +54,7 @@
       <div id="stockResults" class="space-y-2.5"></div>
     </section>
 
-    <!-- TAB 2: CFA DASHBOARD FIXED (From 'Dashboard Fixed' Sheet) -->
+    <!-- TAB 2: CFA DASHBOARD FIXED -->
     <section id="view-cfa" class="hidden space-y-3">
       <div class="bg-white p-3 rounded-xl shadow-sm space-y-2">
         <input type="text" id="cfaSearchInput" oninput="renderCFADashboard()" placeholder="Filter SKU Code or Grade (e.g., TMGO, 15W-40)..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
@@ -83,24 +83,20 @@
   <script>
     let db = { stock: [], cfaFixed: [], transfers: [], heroBO: [] };
 
-    // 1. Try to auto-load Excel file if saved in the same GitHub folder as 'data.xlsx'
+    // Automatically fetch your exact Excel file from GitHub on load
     window.addEventListener('DOMContentLoaded', () => {
-      fetch('data.xlsx')
+      fetch('WBSO%20Stock%20Dasboard%20Mac.xlsx') // Encoded spaces for web URL safety
         .then(res => {
-          if (!res.ok) throw new Error("No default data.xlsx found");
+          if (!res.ok) throw new Error("File not found on server");
           return res.arrayBuffer();
         })
-        .then(buf => processWorkbook(XLSX.read(buf, { type: 'array' }), "Auto-loaded data.xlsx"))
+        .then(buf => processWorkbook(XLSX.read(buf, { type: 'array' }), "Synced live from GitHub"))
         .catch(() => {
-          document.getElementById('stockResults').innerHTML = `
-            <div class="bg-white p-6 rounded-xl shadow-sm text-center text-slate-600">
-              <p class="font-bold text-base mb-1">Welcome to WBSO Stock App</p>
-              <p class="text-xs mb-4">Tap the orange <b>"📂 Load Excel"</b> button at the top right and select your <b>WBSO Stock Dasboard Mac.xlsx</b> file to view live data.</p>
-            </div>`;
+          document.getElementById('fileStatus').innerText = "Using manual upload fallback";
         });
     });
 
-    // 2. Handle Manual File Upload on Mobile/Desktop
+    // Handle Manual File Upload if needed
     document.getElementById('excelUpload').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -114,7 +110,6 @@
       reader.readAsArrayBuffer(file);
     });
 
-    // 3. Parse Sheets from Excel File
     function processWorkbook(workbook, statusText) {
       document.getElementById('fileStatus').innerText = statusText;
 
@@ -153,7 +148,6 @@
         cfas.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // TAB 1 RENDER: Stock Search
     function renderStockSearch() {
       const q = (document.getElementById('stockSearchInput').value || '').toLowerCase().trim();
       const plant = document.getElementById('plantFilter').value;
@@ -185,7 +179,6 @@
       `).join('');
     }
 
-    // TAB 2 RENDER: CFA Fixed Dashboard
     function renderCFADashboard() {
       const q = (document.getElementById('cfaSearchInput').value || '').toLowerCase().trim();
       const container = document.getElementById('cfaResults');
@@ -235,7 +228,6 @@
       `).join('');
     }
 
-    // TAB 3 RENDER: Stock Transfer from CIP to CFA
     function renderTransfers() {
       const cfa = document.getElementById('transferCfaFilter').value;
       const filtered = db.transfers.filter(r => cfa === 'ALL' || (r['CFA'] || '').trim() === cfa);
@@ -261,7 +253,6 @@
       `).join('');
     }
 
-    // TAB 4 RENDER: Hero Back Orders
     function renderHero() {
       document.getElementById('heroResults').innerHTML = db.heroBO.map(r => `
         <div class="bg-white p-3.5 rounded-xl shadow-sm flex justify-between items-center border-l-4 border-red-600">
@@ -278,7 +269,6 @@
       `).join('');
     }
 
-    // Tab Switcher
     function switchTab(tab) {
       ['search', 'cfa', 'transfer', 'hero'].forEach(t => {
         document.getElementById('view-' + t).classList.add('hidden');
