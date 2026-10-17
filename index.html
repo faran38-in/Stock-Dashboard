@@ -17,7 +17,7 @@
 
   <!-- Header -->
   <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 shadow-lg sticky top-0 z-20 border-b border-blue-900/50">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div>
         <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-orange-400 flex items-center gap-2">
           ⚡ WBSO Stock Portal
@@ -33,7 +33,7 @@
 
   <!-- Navigation Tabs -->
   <nav class="bg-white shadow-sm sticky top-[65px] z-10 border-b border-slate-200 overflow-x-auto">
-    <div class="max-w-4xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+    <div class="max-w-6xl mx-auto flex text-xs sm:text-sm text-slate-600 whitespace-nowrap">
       <button onclick="switchTab('search')" id="tab-search" class="flex-1 py-3 px-4 text-center tab-active transition">🔍 Stock Search</button>
       <button onclick="switchTab('cfa')" id="tab-cfa" class="flex-1 py-3 px-4 text-center transition">📊 CFA Fixed</button>
       <button onclick="switchTab('transfer')" id="tab-transfer" class="flex-1 py-3 px-4 text-center transition">🚚 CIP to CFA</button>
@@ -42,45 +42,46 @@
   </nav>
 
   <!-- Main Content Container -->
-  <main class="max-w-4xl mx-auto p-3 sm:p-4">
+  <main class="max-w-6xl mx-auto p-3 sm:p-5">
 
-    <!-- TAB 1: STOCK SEARCH -->
-    <section id="view-search" class="space-y-3">
-      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 space-y-2.5">
+    <!-- TAB 1: STOCK SEARCH (Rectangular Grid Layout) -->
+    <section id="view-search" class="space-y-4">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
         <div class="relative">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
-          <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Search Material Code or Grade (e.g., 7420401, 4T, PRIDE)..." class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">🔍</span>
+          <input type="text" id="stockSearchInput" oninput="renderStockSearch()" placeholder="Search Material Code or Grade (e.g., 7420401, 4T, PRIDE)..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
         </div>
-        <select id="plantFilter" onchange="renderStockSearch()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <select id="plantFilter" onchange="renderStockSearch()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
           <option value="ALL">All Plants & CFAs</option>
         </select>
       </div>
       <div id="stockSummary" class="text-xs text-slate-500 font-semibold px-1"></div>
-      <div id="stockResults" class="space-y-2.5"></div>
+      <!-- Rectangular Grid Container -->
+      <div id="stockResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
     </section>
 
     <!-- TAB 2: CFA DASHBOARD FIXED -->
-    <section id="view-cfa" class="hidden space-y-3">
-      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80">
-        <input type="text" id="cfaSearchInput" oninput="renderCFADashboard()" placeholder="Filter SKU Code or Grade (e.g., TMGO, 15W-40)..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+    <section id="view-cfa" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+        <input type="text" id="cfaSearchInput" oninput="renderCFADashboard()" placeholder="Filter SKU Code or Grade (e.g., TMGO, 15W-40)..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
       </div>
-      <div id="cfaResults" class="space-y-2.5"></div>
+      <div id="cfaResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
     </section>
 
     <!-- TAB 3: STOCK TRANSFER CIP TO CFA -->
-    <section id="view-transfer" class="hidden space-y-3">
-      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80">
-        <select id="transferCfaFilter" onchange="renderTransfers()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700">
+    <section id="view-transfer" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+        <select id="transferCfaFilter" onchange="renderTransfers()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700">
           <option value="ALL">All Destination CFAs</option>
         </select>
       </div>
-      <div id="transferSummary" class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-3.5 rounded-2xl shadow-sm flex justify-between items-center text-sm font-semibold"></div>
-      <div id="transferResults" class="space-y-2"></div>
+      <div id="transferSummary" class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 rounded-2xl shadow-sm flex justify-between items-center text-sm font-semibold"></div>
+      <div id="transferResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
     </section>
 
     <!-- TAB 4: HERO BO -->
-    <section id="view-hero" class="hidden space-y-2.5">
-      <div id="heroResults" class="space-y-2.5"></div>
+    <section id="view-hero" class="hidden space-y-3.5">
+      <div id="heroResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
     </section>
 
   </main>
@@ -151,13 +152,12 @@
         cfas.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // TAB 1 RENDER: Stock Search with Plant Deduplication / Aggregation
+    // TAB 1 RENDER: Rectangular Grid with Deduplicated / Combined Totals
     function renderStockSearch() {
       const q = (document.getElementById('stockSearchInput').value || '').toLowerCase().trim();
       const plant = document.getElementById('plantFilter').value;
       const container = document.getElementById('stockResults');
 
-      // Step 1: Filter raw rows
       let filtered = db.stock.filter(row => {
         const mat = String(row['Material'] || '').toLowerCase();
         const desc = String(row['Material Description'] || '').toLowerCase();
@@ -167,7 +167,6 @@
         return matchQuery && matchPlant && (Number(row['Unrestricted'] || 0) > 0 || Number(row['Transit and Transfer'] || 0) > 0);
       });
 
-      // Step 2: Combine duplicate material + plant rows so quantities add up into 1 line item
       let aggregatedMap = {};
       filtered.forEach(row => {
         const material = String(row['Material'] || '').trim();
@@ -190,22 +189,28 @@
 
       let combinedList = Object.values(aggregatedMap);
 
-      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 60)} of ${combinedList.length} consolidated locations`;
+      document.getElementById('stockSummary').innerText = `Showing ${Math.min(combinedList.length, 90)} of ${combinedList.length} consolidated locations`;
 
-      container.innerHTML = combinedList.slice(0, 60).map(r => `
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition flex justify-between items-center relative overflow-hidden">
+      container.innerHTML = combinedList.slice(0, 90).map(r => `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between relative overflow-hidden group">
           <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
-          <div class="pr-3 pl-1">
-            <div class="flex items-center gap-1.5 mb-1">
-              <span class="text-[11px] font-bold bg-blue-50 text-blue-900 px-2 py-0.5 rounded-md border border-blue-100">${r['Material']}</span>
-              <span class="text-[11px] font-semibold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md">${r['Name 1']}</span>
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-2">
+              <span class="text-[11px] font-extrabold bg-blue-50 text-blue-900 px-2 py-0.5 rounded-md border border-blue-100">${r['Material']}</span>
+              <span class="text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md truncate max-w-[150px]">${r['Name 1']}</span>
             </div>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">${r['Material Description']}</h3>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight line-clamp-2 mb-3">${r['Material Description']}</h3>
           </div>
-          <div class="text-right whitespace-nowrap bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Available</div>
-            <div class="text-base font-extrabold text-emerald-700">${r['Unrestricted']} <span class="text-xs font-medium text-slate-500">${r['Base Unit of Measure']}</span></div>
-            ${r['Transit and Transfer'] > 0 ? `<div class="text-[11px] font-semibold text-amber-600 mt-0.5">Transit: ${r['Transit and Transfer']}</div>` : ''}
+          <div class="pt-3 border-t border-slate-100 flex justify-between items-end bg-slate-50/50 -mx-4 -mb-4 p-3 rounded-b-2xl">
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Available Stock</div>
+              <div class="text-base font-extrabold text-emerald-700">${r['Unrestricted']} <span class="text-xs font-semibold text-slate-500">${r['Base Unit of Measure']}</span></div>
+            </div>
+            ${r['Transit and Transfer'] > 0 ? `
+              <div class="text-right">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Transit</div>
+                <div class="text-sm font-bold text-amber-600">${r['Transit and Transfer']}</div>
+              </div>` : ''}
           </div>
         </div>
       `).join('');
@@ -221,35 +226,32 @@
       });
 
       container.innerHTML = filtered.map(r => `
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
-          <div class="flex justify-between items-start border-b border-slate-100 pb-2.5">
-            <div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start border-b border-slate-100 pb-2 mb-2">
               <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">${r['SKU Code']}</span>
-              <h3 class="text-sm font-bold text-slate-900 mt-1">${r['SKU Description']}</h3>
+              <span class="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">CIP: ${r['CIP Kolkata'] || 'A-0;T-0'}</span>
             </div>
-            <div class="text-right bg-slate-50 px-2.5 py-1 rounded-xl">
-              <span class="text-[10px] text-slate-400 block uppercase font-bold">CIP Kolkata</span>
-              <span class="text-xs font-extrabold text-slate-800">${r['CIP Kolkata'] || 'A-0;T-0'}</span>
-            </div>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2">${r['SKU Description']}</h3>
           </div>
-          <div class="grid grid-cols-3 gap-2 text-center text-xs">
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <div class="font-bold text-slate-700 mb-0.5">Mourigram</div>
-              <div class="text-[11px] text-slate-500">${r['CFA-MOURIGRAM'] || '-'}</div>
+          <div class="grid grid-cols-3 gap-1.5 text-center text-xs pt-2">
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <div class="font-bold text-slate-700 text-[11px]">Mourigram</div>
+              <div class="text-[10px] text-slate-500">${r['CFA-MOURIGRAM'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
                 Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Mourigram'] || 0}
               </div>
             </div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <div class="font-bold text-slate-700 mb-0.5">Rajbandh</div>
-              <div class="text-[11px] text-slate-500">${r['CFA-RAJBANDH'] || '-'}</div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <div class="font-bold text-slate-700 text-[11px]">Rajbandh</div>
+              <div class="text-[10px] text-slate-500">${r['CFA-RAJBANDH'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
                 Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Rajbandh'] || 0}
               </div>
             </div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <div class="font-bold text-slate-700 mb-0.5">Raninagar</div>
-              <div class="text-[11px] text-slate-500">${r['CFA-RANINAGAR (LUBE)'] || '-'}</div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+              <div class="font-bold text-slate-700 text-[11px]">Raninagar</div>
+              <div class="text-[10px] text-slate-500">${r['CFA-RANINAGAR (LUBE)'] || '-'}</div>
               <div class="mt-1 font-bold ${Number(r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar']) > 0 ? 'text-red-600' : 'text-emerald-600'}">
                 Req: ${r['Shortfall/Excess Qty (No of SKU) for CFA Raninagar'] || 0}
               </div>
@@ -270,17 +272,17 @@
       `;
 
       document.getElementById('transferResults').innerHTML = filtered.map(r => `
-        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 flex justify-between items-center">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
           <div>
-            <div class="flex items-center gap-1.5 mb-0.5">
+            <div class="flex items-center justify-between gap-1 mb-2">
               <span class="text-[11px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md">${r['SKU Code']}</span>
               <span class="text-[11px] bg-orange-100 text-orange-800 font-semibold px-2 py-0.5 rounded-md">${(r['CFA'] || '').trim()}</span>
             </div>
-            <h4 class="text-sm font-bold text-slate-900 mt-1">${r['SKU Description']}</h4>
+            <h4 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2">${r['SKU Description']}</h4>
           </div>
-          <div class="text-right bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-            <div class="text-sm font-bold text-slate-900">Qty: ${r['Qty '] || r['Qty'] || 0}</div>
-            <div class="text-xs text-blue-700 font-bold">${Number(r['Qty in KL'] || 0).toFixed(2)} KL</div>
+          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/50 -mx-4 -mb-4 p-3 rounded-b-2xl">
+            <span class="text-xs font-bold text-slate-700">Qty: ${r['Qty '] || r['Qty'] || 0}</span>
+            <span class="text-xs font-extrabold text-blue-700">${Number(r['Qty in KL'] || 0).toFixed(2)} KL</span>
           </div>
         </div>
       `).join('');
@@ -288,16 +290,19 @@
 
     function renderHero() {
       document.getElementById('heroResults').innerHTML = db.heroBO.map(r => `
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex justify-between items-center relative overflow-hidden">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between relative overflow-hidden">
           <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
-          <div class="pl-1">
-            <span class="text-[11px] font-bold text-slate-400">PO: ${r['PO No']} | IOC: ${r['IOC Code']}</span>
-            <h4 class="text-sm font-bold text-slate-900 mt-0.5">${r['Part Desc.']}</h4>
-            <span class="text-xs text-slate-500">Part No: ${r['Part No.']} (Pack: ${r['Pack Size']})</span>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-[10px] font-bold text-slate-400">PO: ${r['PO No']}</span>
+              <span class="text-[10px] font-bold text-slate-500">IOC: ${r['IOC Code']}</span>
+            </div>
+            <h4 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 mb-2">${r['Part Desc.']}</h4>
+            <span class="text-[11px] text-slate-500 block">Part No: ${r['Part No.']} (Pack: ${r['Pack Size']})</span>
           </div>
-          <div class="text-right bg-red-50/50 px-3 py-2 rounded-xl border border-red-100">
+          <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center bg-red-50/40 -mx-4 -mb-4 p-3 rounded-b-2xl">
             <div class="text-sm font-extrabold text-red-600">${r['Order Qty']} Nos</div>
-            <div class="text-xs text-slate-600 font-semibold">${r['Qty in Carton']} Cartons</div>
+            <div class="text-xs text-slate-700 font-bold">${r['Qty in Carton']} Cartons</div>
           </div>
         </div>
       `).join('');
